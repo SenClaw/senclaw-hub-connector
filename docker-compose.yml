@@ -1,0 +1,19 @@
+services:
+  hub-connector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: senclaw-hub-connector:latest
+    container_name: senclaw-hub-connector
+    ports:
+      - "${HUB_CONNECTOR_PORT:-18080}:18080"
+    environment:
+      SHARED_PORT: ":18080"
+      # URL returned to clients (REST); from the host this is usually localhost + published port
+      GRPC_URL: "${GRPC_URL:-127.0.0.1:18080}"
+    volumes:
+      - hub_connector_data:/data
+    restart: unless-stopped
+
+volumes:
+  hub_connector_data:

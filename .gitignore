@@ -1,0 +1,21 @@
+# Binaries
+/server
+/bin/
+*.exe
+*.test
+*.out
+
+# Local data / secrets
+.env
+*.db
+*.db-journal
+/data/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Go
+vendor/

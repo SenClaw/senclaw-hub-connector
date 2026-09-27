@@ -1,0 +1,36 @@
+name: ci
+
+# Build and vet on every push/PR to main so broken CGO/SQLite trees never land.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Go build + vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install CGO deps (sqlite3)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc libc6-dev libsqlite3-dev
+
+      - name: Build
+        run: CGO_ENABLED=1 go build -trimpath -o dist/server ./cmd/server
+
+      - name: Vet
+        run: CGO_ENABLED=1 go vet ./...

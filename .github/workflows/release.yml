@@ -1,0 +1,65 @@
+name: release
+
+# Tag push (`v0.1.0`, …) → build the hub-connector binary per platform and
+# publish it on this repo's GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            goos: darwin
+            goarch: arm64
+            asset: senclaw-hub-connector-darwin-arm64
+          - os: ubuntu-22.04
+            goos: linux
+            goarch: amd64
+            asset: senclaw-hub-connector-linux-amd64
+          - os: ubuntu-22.04
+            goos: linux
+            goarch: arm64
+            asset: senclaw-hub-connector-linux-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Linux CGO deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc libc6-dev libsqlite3-dev \
+            gcc-aarch64-linux-gnu
+
+      - name: Build
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "1"
+        run: |
+          mkdir -p dist
+          # Cross-compile linux/arm64 from amd64 runners needs the aarch64 gcc.
+          if [ "$GOOS" = "linux" ] && [ "$GOARCH" = "arm64" ]; then
+            export CC=aarch64-linux-gnu-gcc
+            export CXX=aarch64-linux-gnu-g++
+          fi
+          go build -trimpath -ldflags="-s -w" -o "dist/${{ matrix.asset }}" ./cmd/server
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
