@@ -214,6 +214,11 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 		writeMu.Lock()
 		defer writeMu.Unlock()
+		// Every write gets its own deadline. The ping loop sets one too, and a
+		// deadline is sticky: without this, any frame relayed more than
+		// wsWriteWait after the last ping failed with "i/o timeout" and the
+		// recipient was dropped from its channel.
+		_ = conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
 		return conn.WriteMessage(websocket.TextMessage, data)
 	}
 	go func() {
