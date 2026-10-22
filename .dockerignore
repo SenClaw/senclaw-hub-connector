@@ -4,3 +4,5 @@
 bin/
 server
 test_client.go
+.github/
+deploy/

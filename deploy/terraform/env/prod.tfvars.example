@@ -1,0 +1,32 @@
+# Copy to prod.tfvars (git-ignored) and fill.
+#   make apply ENV=prod TAG=0.1.0
+
+# Cluster: either a kubeconfig path...
+kube_config_path = "~/.kube/config"
+# ...or the API host + base64 certs (leave kube_config_path = "" then):
+# host                   = "https://10.0.0.1:6443"
+# client_certificate     = "<base64>"
+# client_key             = "<base64>"
+# cluster_ca_certificate = "<base64>"
+
+namespace = "senclaw-hub"
+
+# Tag of an image built by .github/workflows/docker.yml: git tag v0.1.0 -> "0.1.0".
+# `make apply TAG=...` overrides it.
+image_tag = "0.1.0"
+
+# Only while the GHCR package is private (read:packages token). Leave empty once
+# the package is public.
+# registry_username = "your-github-user"
+# registry_password = "ghp_..."
+
+# Public host. Empty = no Ingress; reach the hub with `kubectl port-forward`.
+domain        = "hub.example.com"
+ingress_class = "nginx" # "traefik" on a stock k3s without ingress-nginx
+tls_secret    = ""      # e.g. "hub-tls" (cert-manager or a pre-made secret)
+# ingress_annotations = {
+#   "cert-manager.io/cluster-issuer" = "letsencrypt"
+# }
+
+data_storage  = "1Gi"
+storage_class = "" # "" = cluster default (local-path on k3s)

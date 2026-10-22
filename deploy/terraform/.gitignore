@@ -1,0 +1,7 @@
+.terraform/
+# State and tfvars hold cluster credentials and the registry token.
+*.tfstate
+*.tfstate.*
+env/*.tfvars
+!env/*.tfvars.example
+crash.log
